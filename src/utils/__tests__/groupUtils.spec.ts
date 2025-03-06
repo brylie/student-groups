@@ -1,6 +1,14 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createGroups } from '../groupUtils'
-import type { Student, Group } from '../groupUtils'
+import {
+  calculateGroupSizes,
+  createEmptyGroup,
+  createInitialStudents,
+  findBestCandidate,
+  assignStudentsToGroups,
+  createGroups,
+  type Student,
+  type Group,
+} from '../groupUtils'
 
 // Mock the shuffle function from lodash
 vi.mock('lodash', () => ({
@@ -26,6 +34,106 @@ function setupTest(studentCount: number) {
 }
 
 describe('groupUtils', () => {
+  describe('calculateGroupSizes', () => {
+    it('should handle small groups of 3 or fewer students', () => {
+      expect(calculateGroupSizes(3)).toEqual({ numGroups: 1, groupSizes: [3] })
+      expect(calculateGroupSizes(2)).toEqual({ numGroups: 1, groupSizes: [2] })
+      expect(calculateGroupSizes(1)).toEqual({ numGroups: 1, groupSizes: [1] })
+    })
+
+    it('should create pairs for even numbers of students', () => {
+      expect(calculateGroupSizes(4)).toEqual({ numGroups: 2, groupSizes: [2, 2] })
+      expect(calculateGroupSizes(6)).toEqual({ numGroups: 3, groupSizes: [2, 2, 2] })
+      expect(calculateGroupSizes(8)).toEqual({ numGroups: 4, groupSizes: [2, 2, 2, 2] })
+    })
+
+    it('should create pairs with one group of three for odd numbers', () => {
+      expect(calculateGroupSizes(5)).toEqual({ numGroups: 2, groupSizes: [2, 3] })
+      expect(calculateGroupSizes(7)).toEqual({ numGroups: 3, groupSizes: [2, 2, 3] })
+      expect(calculateGroupSizes(9)).toEqual({ numGroups: 4, groupSizes: [2, 2, 2, 3] })
+    })
+  })
+
+  describe('createEmptyGroup', () => {
+    it('should create a group with the correct ID and name', () => {
+      const group1 = createEmptyGroup(1)
+      expect(group1).toEqual({
+        id: 1,
+        name: 'Group A',
+        students: [],
+      })
+
+      const group3 = createEmptyGroup(3)
+      expect(group3).toEqual({
+        id: 3,
+        name: 'Group C',
+        students: [],
+      })
+    })
+  })
+
+  describe('createInitialStudents', () => {
+    it('should create the correct number of students with sequential IDs', () => {
+      const students = createInitialStudents(3)
+      expect(students).toEqual([
+        { id: 1, name: 'Student 1', groupId: 0 },
+        { id: 2, name: 'Student 2', groupId: 0 },
+        { id: 3, name: 'Student 3', groupId: 0 },
+      ])
+    })
+  })
+
+  describe('findBestCandidate', () => {
+    it('should prefer students who are not neighbors', () => {
+      const unassignedStudents: Student[] = [
+        { id: 1, name: 'Student 1', groupId: 0 },
+        { id: 3, name: 'Student 3', groupId: 0 },
+        { id: 4, name: 'Student 4', groupId: 0 },
+      ]
+      const groupStudents: Student[] = [{ id: 2, name: 'Student 2', groupId: 1 }]
+
+      const bestIndex = findBestCandidate(unassignedStudents, groupStudents)
+      const selectedStudent = unassignedStudents[bestIndex]
+      expect(Math.abs(selectedStudent.id - groupStudents[0].id)).toBeGreaterThan(1)
+    })
+
+    it('should work with an empty group', () => {
+      const unassignedStudents: Student[] = [
+        { id: 1, name: 'Student 1', groupId: 0 },
+        { id: 2, name: 'Student 2', groupId: 0 },
+      ]
+      const groupStudents: Student[] = []
+
+      const bestIndex = findBestCandidate(unassignedStudents, groupStudents)
+      expect(bestIndex).toBe(0) // Should pick the first student when group is empty
+    })
+  })
+
+  describe('assignStudentsToGroups', () => {
+    it('should assign students to groups of the correct sizes', () => {
+      const students = createInitialStudents(5)
+      const groupSizes = [2, 3]
+      const mockShuffle = <T>(arr: T[]): T[] => [...arr]
+
+      const groups = assignStudentsToGroups(students, groupSizes, mockShuffle)
+
+      expect(groups).toHaveLength(2)
+      expect(groups[0].students).toHaveLength(2)
+      expect(groups[1].students).toHaveLength(3)
+    })
+
+    it('should assign all students to groups', () => {
+      const students = createInitialStudents(6)
+      const groupSizes = [3, 3]
+      const mockShuffle = <T>(arr: T[]): T[] => [...arr]
+
+      const groups = assignStudentsToGroups(students, groupSizes, mockShuffle)
+
+      const totalAssignedStudents = groups.reduce((sum, group) => sum + group.students.length, 0)
+      expect(totalAssignedStudents).toBe(6)
+    })
+  })
+
   describe('createGroups', () => {
     it('should create groups of 2, 2, 2, 3 for 9 students', () => {
       const students: Student[] = []
@@ -38,7 +146,6 @@ describe('groupUtils', () => {
 
       const groupSizes = groups.map((group) => group.students.length)
       groupSizes.sort((a, b) => a - b)
-      console.log('Group sizes:', groupSizes)
       expect(groupSizes).toEqual([2, 2, 2, 3])
     })
 

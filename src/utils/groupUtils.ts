@@ -10,7 +10,117 @@ export interface Group {
   students: string[]
 }
 
-// Create random groups of 2-3 students
+export interface GroupSizeResult {
+  numGroups: number
+  groupSizes: number[]
+}
+
+export function calculateGroupSizes(count: number): GroupSizeResult {
+  let numGroups: number
+  let groupSizes: number[]
+
+  if (count <= 3) {
+    // Special case for very small groups
+    numGroups = 1
+    groupSizes = [count]
+  } else if (count % 2 === 0) {
+    // If even number, make all pairs
+    numGroups = count / 2
+    groupSizes = Array(numGroups).fill(2)
+  } else {
+    // For odd numbers, make pairs with one group of 3
+    numGroups = Math.floor(count / 2)
+    groupSizes = Array(numGroups).fill(2)
+    groupSizes[numGroups - 1] = 3
+  }
+
+  return { numGroups, groupSizes }
+}
+
+export function createEmptyGroup(id: number): Group {
+  return {
+    id,
+    name: `Group ${String.fromCharCode(64 + id)}`, // A, B, C, etc.
+    students: [],
+  }
+}
+
+export function createInitialStudents(count: number): Student[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    name: `Student ${i + 1}`,
+    groupId: 0,
+  }))
+}
+
+export function findBestCandidate(unassignedStudents: Student[], groupStudents: Student[]): number {
+  // If no students in group yet, return first unassigned student
+  if (groupStudents.length === 0) {
+    return 0
+  }
+
+  let bestCandidateIndex = 0
+  let minNeighborCount = Infinity
+  let foundNonNeighbor = false
+
+  // Look through unassigned students to find the best candidate
+  for (let i = 0; i < unassignedStudents.length; i++) {
+    const candidate = unassignedStudents[i]
+    let isNeighbor = false
+
+    // Check if this student is adjacent to the last assigned student
+    const lastAssigned = groupStudents[groupStudents.length - 1]
+    if (Math.abs(candidate.id - lastAssigned.id) === 1) {
+      isNeighbor = true
+    }
+
+    // If we haven't found a non-neighbor yet and this student isn't a neighbor
+    if (!foundNonNeighbor && !isNeighbor) {
+      bestCandidateIndex = i
+      foundNonNeighbor = true
+      minNeighborCount = 0
+    }
+    // If we haven't found a non-neighbor, keep track of the current best neighbor
+    else if (!foundNonNeighbor && isNeighbor) {
+      bestCandidateIndex = i
+      minNeighborCount = 1
+    }
+  }
+
+  return bestCandidateIndex
+}
+
+export function assignStudentsToGroups(
+  students: Student[],
+  groupSizes: number[],
+  shuffle: <T>(array: T[]) => T[],
+): Group[] {
+  // First shuffle the students
+  const shuffledStudents = shuffle([...students])
+  const unassignedStudents = [...shuffledStudents]
+  const groups: Group[] = []
+
+  // Create and fill groups
+  groupSizes.forEach((targetSize, index) => {
+    const group = createEmptyGroup(index + 1)
+    const groupStudents: Student[] = []
+
+    // Fill the group while trying to avoid neighbor pairs
+    while (groupStudents.length < targetSize && unassignedStudents.length > 0) {
+      const bestCandidateIndex = findBestCandidate(unassignedStudents, groupStudents)
+      const student = unassignedStudents.splice(bestCandidateIndex, 1)[0]
+      student.groupId = group.id
+      group.students.push(student.name)
+      groupStudents.push(student)
+    }
+
+    groups.push(group)
+  })
+
+  return groups
+}
+
+// Main function that orchestrates the group creation process
 export function createGroups(
   count: number,
   students: Student[],
@@ -19,118 +129,22 @@ export function createGroups(
   currentScreen: { value: string },
   shuffle: <T>(array: T[]) => T[],
 ) {
-  const studentCount = { value: count }
-
   // Reset previous data
   students.length = 0
   groups.length = 0
 
-  // Create student array with IDs
-  for (let i = 1; i <= studentCount.value; i++) {
-    students.push({
-      id: i,
-      name: `Student ${i}`,
-      groupId: 0,
-    })
-  }
+  // Calculate group sizes
+  const { groupSizes } = calculateGroupSizes(count)
 
-  // Calculate number of groups and sizes
-  let numGroups: number
-  let groupSizes: number[]
+  // Create initial students
+  const initialStudents = createInitialStudents(count)
 
-  if (count <= 4) {
-    numGroups = 2
-    groupSizes = Array(numGroups).fill(Math.floor(count / 2))
-  } else if (count === 9) {
-    // Special case for 9 students
-    numGroups = 4
-    groupSizes = [2, 2, 2, 3]
-  } else if (count % 3 === 0) {
-    // If divisible by 3, make all groups size 3
-    numGroups = count / 3
-    groupSizes = Array(numGroups).fill(3)
-  } else if (count % 3 === 1 && count > 4) {
-    // If count % 3 is 1 and count > 4, make groups of 2 with one group of 3
-    numGroups = Math.floor(count / 2)
-    groupSizes = Array(numGroups).fill(2)
-    groupSizes[numGroups - 1] = 3
-  } else {
-    // For other cases, try to make groups of 2 with one group of 3 if needed
-    numGroups = Math.floor((count + 1) / 2)
-    groupSizes = Array(numGroups).fill(2)
+  // Create and assign groups
+  const newGroups = assignStudentsToGroups(initialStudents, groupSizes, shuffle)
 
-    // If there are leftover students after making pairs, adjust last group
-    const leftover = count - 2 * (numGroups - 1)
-    if (leftover > 0) {
-      groupSizes[numGroups - 1] = leftover
-    }
-  }
-
-  // Create empty groups
-  for (let i = 0; i < numGroups; i++) {
-    groups.push({
-      id: i + 1,
-      name: `Group ${String.fromCharCode(65 + i)}`, // A, B, C, etc.
-      students: [],
-    })
-  }
-
-  // First shuffle the students
-  const shuffledStudents = shuffle([...students])
-
-  // Initialize an array to track assigned students
-  const unassignedStudents = [...shuffledStudents]
-
-  // Assign students to groups while maintaining required group sizes
-  const studentIndex = 0
-  groups.forEach((group, groupIndex) => {
-    const targetSize = groupSizes[groupIndex]
-    const groupStudents: Student[] = []
-
-    // Fill the group while trying to avoid neighbor pairs
-    while (groupStudents.length < targetSize && unassignedStudents.length > 0) {
-      // Try to find a student who isn't adjacent to the last assigned student
-      let bestCandidateIndex = 0
-      let minNeighborCount = Infinity
-
-      // Look through unassigned students to find the best candidate
-      for (let i = 0; i < unassignedStudents.length; i++) {
-        const candidate = unassignedStudents[i]
-        let neighborCount = 0
-
-        // Check if this student is adjacent to any already assigned students in the group
-        if (groupStudents.length > 0) {
-          const lastAssigned = groupStudents[groupStudents.length - 1]
-          // Check if they are neighbors in the original array
-          if (Math.abs(candidate.id - lastAssigned.id) === 1) {
-            neighborCount++
-          }
-        }
-
-        // If we found a better candidate, update our selection
-        if (neighborCount < minNeighborCount) {
-          minNeighborCount = neighborCount
-          bestCandidateIndex = i
-        }
-
-        // If we found a candidate with no neighbors, use them immediately
-        if (minNeighborCount === 0) {
-          break
-        }
-      }
-
-      // Assign the best candidate to this group
-      const student = unassignedStudents.splice(bestCandidateIndex, 1)[0]
-      student.groupId = group.id
-      group.students.push(student.name)
-      groupStudents.push(student)
-    }
-  })
-
-  // Update the students array with the modified objects
-  students.length = 0
-  const sortedStudents = shuffledStudents.sort((a, b) => a.id - b.id)
-  students.push(...sortedStudents)
+  // Update the reference arrays
+  groups.push(...newGroups)
+  students.push(...initialStudents.sort((a, b) => a.id - b.id))
 
   // Reset the current student index and move to student view screen
   currentStudentIndex.value = 0
