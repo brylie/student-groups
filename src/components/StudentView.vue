@@ -5,7 +5,7 @@
         <span class="student-number">Student {{ currentStudentIndex + 1 }}</span>
       </div>
       <div class="group-info">
-        <h2 class="group-name">Group {{ currentGroup.name }}</h2>
+        <h2 class="group-name">{{ currentGroup.name }}</h2>
       </div>
     </div>
 
