@@ -1,6 +1,6 @@
 # mk-student-groups
 
-![Coverage](https://img.shields.io/badge/coverage-39%25-red)
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
 Student grouping app.
 
