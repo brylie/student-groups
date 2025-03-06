@@ -1,93 +1,114 @@
 <template>
   <div class="student-view">
     <div class="student-card">
-      <h2>Student {{ currentStudentIndex + 1 }}</h2>
+      <div class="student-info">
+        <span class="student-number">Student {{ currentStudentIndex + 1 }}</span>
+      </div>
       <div class="group-info">
-        <h3>Your Group: {{ currentGroup.name }}</h3>
-        <p>Group Members: {{ currentGroup.students.join(', ') }}</p>
+        <h2 class="group-name">Group {{ currentGroup.name }}</h2>
       </div>
     </div>
 
     <div class="navigation">
-      <button @click="previousStudent" :disabled="currentStudentIndex === 0">
-        Previous
-      </button>
+      <button @click="previousStudent" :disabled="currentStudentIndex === 0">Previous</button>
       <span>{{ currentStudentIndex + 1 }} of {{ totalStudents }}</span>
       <button @click="nextStudent" :disabled="currentStudentIndex >= totalStudents - 1">
         Next
       </button>
     </div>
 
-    <button @click="$emit('reset')" class="secondary-button">
-      Start Over
-    </button>
+    <button @click="$emit('reset')" class="secondary-button">Start Over</button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from 'vue'
 
 interface Student {
-  id: number;
-  name: string;
-  groupId: number;
+  id: number
+  name: string
+  groupId: number
 }
 
 interface Group {
-  id: number;
-  name: string;
-  students: string[];
+  id: number
+  name: string
+  students: string[]
 }
 
 const props = defineProps<{
-  currentStudentIndex: number;
-  totalStudents: number;
-  students: Student[];
-  groups: Group[];
-}>();
+  currentStudentIndex: number
+  totalStudents: number
+  students: Student[]
+  groups: Group[]
+}>()
 
 const emit = defineEmits<{
-  (e: 'previous'): void;
-  (e: 'next'): void;
-  (e: 'reset'): void;
-}>();
+  (e: 'previous'): void
+  (e: 'next'): void
+  (e: 'reset'): void
+}>()
 
 const currentGroup = computed(() => {
-  if (!props.students.length || props.currentStudentIndex < 0 || props.currentStudentIndex >= props.students.length) {
-    return { name: '', students: [] };
+  if (
+    !props.students.length ||
+    props.currentStudentIndex < 0 ||
+    props.currentStudentIndex >= props.students.length
+  ) {
+    return { name: '', students: [] }
   }
-  
-  const currentStudent = props.students[props.currentStudentIndex];
-  const groupId = currentStudent.groupId;
-  return props.groups.find(group => group.id === groupId) || { name: '', students: [] };
-});
+
+  const currentStudent = props.students[props.currentStudentIndex]
+  const groupId = currentStudent.groupId
+  return props.groups.find((group) => group.id === groupId) || { name: '', students: [] }
+})
 
 function nextStudent() {
-  emit('next');
+  emit('next')
 }
 
 function previousStudent() {
-  emit('previous');
+  emit('previous')
 }
 </script>
 
 <style scoped>
-.student-card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  background-color: #f9f9f9;
-  margin-bottom: 20px;
+.student-view {
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.group-info {
-  margin-top: 15px;
+.student-card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 2rem;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
   text-align: center;
 }
 
-.group-info h3 {
-  color: #4a90e2;
-  margin-bottom: 10px;
+.student-info {
+  margin-bottom: 1.5rem;
+}
+
+.student-number {
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.group-info {
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.group-name {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  margin: 0;
+  font-weight: bold;
+  letter-spacing: 0.5px;
 }
 
 .navigation {
@@ -95,19 +116,23 @@ function previousStudent() {
   justify-content: space-between;
   align-items: center;
   margin: 20px 0;
+  gap: 1rem;
 }
 
 .navigation button {
   background-color: #4a90e2;
   color: white;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
 }
 
 .navigation button:hover:not(:disabled) {
-  background-color: #3a80d2;
+  background-color: #357abd;
 }
 
 .navigation button:disabled {
@@ -115,18 +140,25 @@ function previousStudent() {
   cursor: not-allowed;
 }
 
+.navigation span {
+  font-size: 1.1rem;
+  color: #666;
+}
+
 .secondary-button {
-  background-color: #e0e0e0;
+  background-color: #f0f0f0;
   color: #333;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  margin-top: 10px;
+  font-size: 1rem;
+  font-weight: 500;
   width: 100%;
+  transition: background-color 0.2s;
 }
 
 .secondary-button:hover {
-  background-color: #d0d0d0;
+  background-color: #e0e0e0;
 }
 </style>

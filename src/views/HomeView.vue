@@ -55,6 +55,7 @@ const currentStudentIndex = ref<number>(0)
 
 // Create random groups of 2-3 students
 function createGroupsWrapper(count: number) {
+  studentCount.value = count
   createGroups(count, students.value, groups.value, currentStudentIndex, currentScreen, shuffle)
 }
 
