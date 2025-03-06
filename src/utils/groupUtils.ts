@@ -1,10 +1,10 @@
-interface Student {
+export interface Student {
   id: number
   name: string
   groupId: number
 }
 
-interface Group {
+export interface Group {
   id: number
   name: string
   students: string[]

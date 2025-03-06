@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createGroups } from '../groupUtils'
+import type { Student, Group } from '../groupUtils'
 
 // Mock the shuffle function from lodash
 vi.mock('lodash', () => ({
@@ -8,8 +9,8 @@ vi.mock('lodash', () => ({
 
 // Create a helper function to setup the test environment
 function setupTest(studentCount: number) {
-  const students: any[] = []
-  const groups: any[] = []
+  const students: Student[] = []
+  const groups: Group[] = []
   const currentStudentIndex = { value: 0 }
   const currentScreen = { value: 'setup' }
   // Create a mock shuffle that reverses the array to simulate randomization
@@ -27,8 +28,8 @@ function setupTest(studentCount: number) {
 describe('groupUtils', () => {
   describe('createGroups', () => {
     it('should create groups of 2, 2, 2, 3 for 9 students', () => {
-      const students = []
-      const groups = []
+      const students: Student[] = []
+      const groups: Group[] = []
       const currentStudentIndex = { value: 0 }
       const currentScreen = { value: 'setup' }
       const shuffle = (arr: any[]) => arr
@@ -59,10 +60,7 @@ describe('groupUtils', () => {
         }
 
         // We expect some consecutive assignments to be different due to randomization
-        expect(consecutiveSameGroup).toBeLessThan(
-          assignments.length - 1,
-          `All or most students with consecutive IDs were assigned to the same group for ${count} students`,
-        )
+        expect(consecutiveSameGroup).toBeLessThan(assignments.length - 1)
       }
     })
   })
