@@ -11,7 +11,10 @@ export default mergeConfig(
       root: fileURLToPath(new URL('./', import.meta.url)),
       coverage: {
         provider: 'v8',
-        reporter: ['text', 'json', 'html'],
+        reporter: ['text', 'json-summary', 'html'],
+        reportOnFailure: true,
+        include: ['src/**/*.{ts,vue}'],
+        exclude: ['src/**/*.spec.ts', 'src/**/*.d.ts'],
       },
     },
   }),

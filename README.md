@@ -1,5 +1,7 @@
 # mk-student-groups
 
+![Coverage](https://img.shields.io/badge/coverage-28%25-red)
+
 Student grouping app.
 
 ## Recommended IDE Setup
