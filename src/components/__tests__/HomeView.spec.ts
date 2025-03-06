@@ -4,8 +4,15 @@ import HomeView from '../../views/HomeView.vue'
 import SetupScreen from '../SetupScreen.vue'
 import StudentView from '../StudentView.vue'
 
+// Define the type for HomeView's exposed properties
+interface HomeViewType {
+  currentStudentIndex: number
+  students: Array<{ id: number; name: string; groupId: number }>
+  groups: Array<{ id: number; name: string; students: string[] }>
+}
+
 describe('HomeView', () => {
-  let wrapper: ReturnType<typeof mount>
+  let wrapper: ReturnType<typeof mount<typeof HomeView>>
 
   beforeEach(() => {
     wrapper = mount(HomeView)
@@ -34,18 +41,18 @@ describe('HomeView', () => {
 
     // Test next navigation
     await studentView.vm.$emit('next')
-    expect(wrapper.vm.currentStudentIndex).toBe(1)
+    expect((wrapper.vm as unknown as HomeViewType).currentStudentIndex).toBe(1)
 
     // Test previous navigation
     await studentView.vm.$emit('previous')
-    expect(wrapper.vm.currentStudentIndex).toBe(0)
+    expect((wrapper.vm as unknown as HomeViewType).currentStudentIndex).toBe(0)
 
     // Test reset
     await studentView.vm.$emit('reset')
     expect(wrapper.findComponent(SetupScreen).exists()).toBe(true)
     expect(wrapper.findComponent(StudentView).exists()).toBe(false)
-    expect(wrapper.vm.currentStudentIndex).toBe(0)
-    expect(wrapper.vm.students.length).toBe(0)
-    expect(wrapper.vm.groups.length).toBe(0)
+    expect((wrapper.vm as unknown as HomeViewType).currentStudentIndex).toBe(0)
+    expect((wrapper.vm as unknown as HomeViewType).students.length).toBe(0)
+    expect((wrapper.vm as unknown as HomeViewType).groups.length).toBe(0)
   })
 })
