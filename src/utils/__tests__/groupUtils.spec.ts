@@ -4,7 +4,7 @@ import type { Student, Group } from '../groupUtils'
 
 // Mock the shuffle function from lodash
 vi.mock('lodash', () => ({
-  shuffle: (arr: any[]) => arr,
+  shuffle: <T>(arr: T[]) => arr,
 }))
 
 // Create a helper function to setup the test environment
@@ -14,7 +14,7 @@ function setupTest(studentCount: number) {
   const currentStudentIndex = { value: 0 }
   const currentScreen = { value: 'setup' }
   // Create a mock shuffle that reverses the array to simulate randomization
-  const mockShuffle = (arr: any[]) => [...arr].reverse()
+  const mockShuffle = <T>(arr: T[]) => [...arr].reverse()
 
   createGroups(studentCount, students, groups, currentStudentIndex, currentScreen, mockShuffle)
 
@@ -32,7 +32,7 @@ describe('groupUtils', () => {
       const groups: Group[] = []
       const currentStudentIndex = { value: 0 }
       const currentScreen = { value: 'setup' }
-      const shuffle = (arr: any[]) => arr
+      const shuffle = <T>(arr: T[]): T[] => arr
 
       createGroups(9, students, groups, currentStudentIndex, currentScreen, shuffle)
 
