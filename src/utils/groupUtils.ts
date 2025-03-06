@@ -78,24 +78,59 @@ export function createGroups(
   // First shuffle the students
   const shuffledStudents = shuffle([...students])
 
+  // Initialize an array to track assigned students
+  const unassignedStudents = [...shuffledStudents]
+
   // Assign students to groups while maintaining required group sizes
-  let studentIndex = 0
+  const studentIndex = 0
   groups.forEach((group, groupIndex) => {
     const targetSize = groupSizes[groupIndex]
-    for (let i = 0; i < targetSize; i++) {
-      if (studentIndex >= shuffledStudents.length) {
-        break
+    const groupStudents: Student[] = []
+
+    // Fill the group while trying to avoid neighbor pairs
+    while (groupStudents.length < targetSize && unassignedStudents.length > 0) {
+      // Try to find a student who isn't adjacent to the last assigned student
+      let bestCandidateIndex = 0
+      let minNeighborCount = Infinity
+
+      // Look through unassigned students to find the best candidate
+      for (let i = 0; i < unassignedStudents.length; i++) {
+        const candidate = unassignedStudents[i]
+        let neighborCount = 0
+
+        // Check if this student is adjacent to any already assigned students in the group
+        if (groupStudents.length > 0) {
+          const lastAssigned = groupStudents[groupStudents.length - 1]
+          // Check if they are neighbors in the original array
+          if (Math.abs(candidate.id - lastAssigned.id) === 1) {
+            neighborCount++
+          }
+        }
+
+        // If we found a better candidate, update our selection
+        if (neighborCount < minNeighborCount) {
+          minNeighborCount = neighborCount
+          bestCandidateIndex = i
+        }
+
+        // If we found a candidate with no neighbors, use them immediately
+        if (minNeighborCount === 0) {
+          break
+        }
       }
-      const student = shuffledStudents[studentIndex]
+
+      // Assign the best candidate to this group
+      const student = unassignedStudents.splice(bestCandidateIndex, 1)[0]
       student.groupId = group.id
       group.students.push(student.name)
-      studentIndex++
+      groupStudents.push(student)
     }
   })
 
   // Update the students array with the modified objects
   students.length = 0
-  students.push(...shuffledStudents)
+  const sortedStudents = shuffledStudents.sort((a, b) => a.id - b.id)
+  students.push(...sortedStudents)
 
   // Reset the current student index and move to student view screen
   currentStudentIndex.value = 0

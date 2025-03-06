@@ -63,5 +63,52 @@ describe('groupUtils', () => {
         expect(consecutiveSameGroup).toBeLessThan(assignments.length - 1)
       }
     })
+
+    it('should distribute students randomly and avoid grouping neighbors together', () => {
+      const iterations = 100 // Run multiple iterations to get meaningful statistics
+      const testCases = [5, 6, 7, 8, 9, 10, 11]
+      const maxNeighborFrequency = 0.3 // Maximum 30% of students should be with their neighbors
+
+      for (const count of testCases) {
+        console.log(`\nTesting ${count} students:`)
+        let totalNeighborPairs = 0
+
+        // Run multiple iterations to get meaningful statistics
+        for (let i = 0; i < iterations; i++) {
+          const students: Student[] = []
+          const groups: Group[] = []
+          const currentStudentIndex = { value: 0 }
+          const currentScreen = { value: 'setup' }
+
+          // Use a real shuffle function instead of the mock
+          const realShuffle = <T>(arr: T[]): T[] => {
+            const result = [...arr]
+            for (let i = result.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1))
+              ;[result[i], result[j]] = [result[j], result[i]]
+            }
+            return result
+          }
+
+          createGroups(count, students, groups, currentStudentIndex, currentScreen, realShuffle)
+
+          // Count how many students are grouped with their neighbors
+          for (let j = 1; j < students.length; j++) {
+            if (students[j].groupId === students[j - 1].groupId) {
+              totalNeighborPairs++
+            }
+          }
+        }
+
+        // Calculate the frequency of neighbor pairs
+        const maxPossiblePairs = (count - 1) * iterations // Maximum possible neighbor pairs across all iterations
+        const neighborFrequency = totalNeighborPairs / maxPossiblePairs
+
+        console.log(`Neighbor grouping frequency: ${(neighborFrequency * 100).toFixed(1)}%`)
+
+        // Assert that the neighbor frequency is below our threshold
+        expect(neighborFrequency).toBeLessThan(maxNeighborFrequency)
+      }
+    })
   })
 })
